@@ -81,6 +81,6 @@ export function DeveloperTools(){
   {loading&&<div className="loading-row"><LoaderCircle size={17} className="spin"/> Loading developer records…</div>}
   {message&&<p className="form-success" role="status">{message}</p>}
   {error&&<p className="form-error" role="alert">{error}</p>}
-  <p className="inline-note">New accounts are activated immediately. Give each person their username and temporary password securely; they should change the password after signing in. Passwords are never displayed after creation. Removing a teacher or student deactivates access and preserves academic history.</p>
+  <p className="inline-note">New accounts are activated immediately. Give each person their username and password securely. They can keep the password assigned by the developer; changing it is optional. Passwords are never displayed after creation. Removing a teacher or student deactivates access and preserves academic history.</p>
  </div>;
 }
