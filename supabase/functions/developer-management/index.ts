@@ -234,6 +234,19 @@ Deno.serve(async (req: Request) => {
       return error ? fail(error.message) : json({ success: true, message: "Account deactivated. Academic records were preserved." });
     }
 
+    if (action === "set_password") {
+      const id = text(body.id, 80);
+      const password = typeof body.password === "string" ? body.password : "";
+      if (!id) return fail("Choose an account first.");
+      if (id === authData.user.id) return fail("You cannot change your own developer password here.", 403);
+      if (password.length < 8 || password.length > 72) return fail("Password must be between 8 and 72 characters.");
+      const { data: target, error: targetError } = await admin.from("profiles").select("role").eq("id", id).maybeSingle();
+      if (targetError || !target) return fail("Account not found.", 404);
+      if (target.role === "developer") return fail("Developer passwords cannot be changed from this screen.", 403);
+      const { error } = await admin.auth.admin.updateUserById(id, { password });
+      return error ? fail(error.message) : json({ success: true, message: "Password updated. The user can keep using this password." });
+    }
+
     if (action === "password_reset") {
       const id = text(body.id, 80);
       const { data: target, error: targetError } = await admin.from("profiles").select("id").eq("id", id).maybeSingle();
