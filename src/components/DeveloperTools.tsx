@@ -38,16 +38,16 @@ export function DeveloperTools(){
   setMessage(result?.message||success);await refresh();setBusy(false);return true;
  }
  async function saveClass(event:FormEvent<HTMLFormElement>){
-  event.preventDefault();const form=new FormData(event.currentTarget);
+  event.preventDefault();const formElement=event.currentTarget;const form=new FormData(formElement);
   const payload={action:editing?'update_class':'create_class',...(editing?{id:editing.id}:{}),name:String(form.get('name')),grade_level:String(form.get('grade_level')),academic_year:String(form.get('academic_year')),room:String(form.get('room')||'')};
-  if(await action(payload,editing?'Class updated.':'Class created.')){setEditing(null);event.currentTarget.reset();}
+  if(await action(payload,editing?'Class updated.':'Class created.')){setEditing(null);formElement.reset();}
  }
  async function createMember(event:FormEvent<HTMLFormElement>,role:'teacher'|'student'){
-  event.preventDefault();const form=new FormData(event.currentTarget);
+  event.preventDefault();const formElement=event.currentTarget;const form=new FormData(formElement);
   const payload:Record<string,unknown>={action:'create_account',role,email:String(form.get('email')),full_name:String(form.get('full_name'))};
   if(role==='teacher'){payload.employee_number=String(form.get('employee_number')||'');payload.department=String(form.get('department')||'');payload.class_id=String(form.get('class_id')||'');payload.subject_id=String(form.get('subject_id')||'');}
   else{payload.admission_number=String(form.get('admission_number'));payload.class_id=String(form.get('class_id')||'');payload.date_of_birth=String(form.get('date_of_birth')||'');}
-  if(await action(payload,'Invitation sent.'))event.currentTarget.reset();
+  if(await action(payload,'Invitation sent.'))formElement.reset();
  }
  async function saveAccount(event:FormEvent<HTMLFormElement>,id:string){
   event.preventDefault();const form=new FormData(event.currentTarget);
@@ -56,7 +56,7 @@ export function DeveloperTools(){
  return <div className="developer-tools">
   <section id="developer-classes" className="content-card admin-tools">
    <div className="section-heading"><div><p className="eyebrow">ACADEMIC STRUCTURE</p><h2>Classes</h2><p className="muted">Create, edit, review, and safely remove empty classes.</p></div><BookOpen size={20} className="heading-icon"/></div>
-   <form className="admin-forms" onSubmit={saveClass}><h3>{editing?'Edit class':'Create a class'}</h3><div className="form-row"><input name="name" required placeholder="Class name" defaultValue={editing?.name||''}/><input name="grade_level" required placeholder="Grade level" defaultValue={editing?.grade_level||''}/><input name="academic_year" required placeholder="Academic year" defaultValue={editing?.academic_year||''}/><input name="room" placeholder="Room" defaultValue={editing?.room||''}/></div><div className="developer-actions"><button className="small-primary" disabled={busy}><Plus size={14}/>{editing?'Save changes':'Create class'}</button>{editing&&<button type="button" className="small-secondary" onClick={()=>setEditing(null)}>Cancel</button>}</div></form>
+   <form key={editing?.id||"new-class"} className="admin-forms" onSubmit={saveClass}><h3>{editing?'Edit class':'Create a class'}</h3><div className="form-row"><input name="name" required placeholder="Class name" defaultValue={editing?.name||''}/><input name="grade_level" required placeholder="Grade level" defaultValue={editing?.grade_level||''}/><input name="academic_year" required placeholder="Academic year" defaultValue={editing?.academic_year||''}/><input name="room" placeholder="Room" defaultValue={editing?.room||''}/></div><div className="developer-actions"><button className="small-primary" disabled={busy}><Plus size={14}/>{editing?'Save changes':'Create class'}</button>{editing&&<button type="button" className="small-secondary" onClick={()=>setEditing(null)}>Cancel</button>}</div></form>
    <div className="developer-list">{data.classes.map(item=><div className="developer-row" key={item.id}><div><strong>{item.name}</strong><small>{item.grade_level} · {item.academic_year}{item.room?' · Room '+item.room:''}</small></div><div className="developer-actions"><button type="button" className="small-secondary" onClick={()=>{setEditing(item);document.getElementById('developer-classes')?.scrollIntoView({behavior:'smooth'});}}>Edit</button><button type="button" className="small-danger" disabled={busy} onClick={()=>{if(window.confirm('Delete this class only if it has no linked students or school records?'))void action({action:'delete_class',id:item.id},'Class deleted.');}}>Delete</button></div></div>)}</div>
    {!loading&&!data.classes.length&&<p className="inline-note">No classes have been created yet.</p>}
   </section>
