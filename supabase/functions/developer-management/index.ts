@@ -120,6 +120,8 @@ Deno.serve(async (req: Request) => {
       const full_name = text(body.full_name, 120);
       const role = text(body.role, 20);
       const admission_number = text(body.admission_number, 60);
+      const username = text(body.username, 40).toLowerCase();
+      const password = typeof body.password === "string" ? body.password : "";
       const employee_number = text(body.employee_number, 60);
       const department = text(body.department, 100);
       const class_id = text(body.class_id, 80);
@@ -129,23 +131,18 @@ Deno.serve(async (req: Request) => {
       if (role === "student" && !admission_number) return fail("Admission number is required for students.");
       if (role === "teacher" && Boolean(class_id) !== Boolean(subject_id)) return fail("Choose both a class and a subject, or leave both empty.");
 
-      const redirectTo = "https://genesis-international-school-pi.vercel.app/auth/callback?next=/update-password";
-      const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-        data: { full_name },
-        redirectTo,
+      const { data: existingUsername } = await admin.from("profiles").select("id").eq("username", username).maybeSingle();
+      if (existingUsername) return fail("That username is already in use. Choose another one.", 409);
+      const { data: created, error: createError } = await admin.auth.admin.createUser({
+        email, password, email_confirm: true, user_metadata: { full_name },
       });
-      if (inviteError || !invited.user) return fail(inviteError?.message || "Could not send the invitation.", 400);
-
-      const userId = invited.user.id;
-      const { error: profileError } = await admin.from("profiles").insert({
-        id: userId, role, full_name, is_active: true,
-        username: email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 40) || null,
-      });
+      if (createError || !created.user) return fail(createError?.message || "Could not create the account.", 400);
+      const userId = created.user.id;
+      const { error: profileError } = await admin.from("profiles").insert({ id: userId, role, full_name, username, is_active: true });
       if (profileError) {
         await admin.auth.admin.deleteUser(userId);
         return fail(profileError.message, 400);
       }
-
       let detailError: { message: string } | null = null;
       if (role === "student") {
         const { error } = await admin.from("students").insert({
@@ -170,7 +167,7 @@ Deno.serve(async (req: Request) => {
         await admin.auth.admin.deleteUser(userId);
         return fail(detailError.message, 400);
       }
-      return json({ success: true, message: `Invitation sent to ${email}.` });
+      return json({ success: true, message: `${role === "teacher" ? "Teacher" : "Student"} account created for ${full_name}. They can sign in using their email or username.` });
     }
 
     if (action === "assign_student_class") {
