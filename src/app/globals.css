@@ -49,3 +49,31 @@
 .admin-forms h3{display:flex;align-items:center;gap:7px}
 .admin-forms .form-row select{height:47px;min-width:150px;border:1px solid #e4e5df;border-radius:3px;padding:0 12px;background:#fff;color:#222f2a;font-size:13px}
 @media(max-width:760px){.developer-row,.access-row{align-items:flex-start;flex-direction:column}.developer-row .developer-actions{justify-content:flex-start;width:100%}.developer-row .developer-actions select{max-width:100%}.account-summary{min-width:0}.developer-tools .form-row>*{min-width:100%}}
+
+
+/* Developer account management — clearer responsive controls */
+.platform-access{padding:26px}
+.account-toolbar{display:flex;align-items:center;gap:10px;margin:18px 0 10px}
+.account-search{flex:1;max-width:520px}
+.account-search input,.account-password input{width:100%;height:40px;border:1px solid #e5e7e1;border-radius:4px;padding:0 12px;background:#fff;color:#293b32;font-size:12px}
+.account-overview{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:11px 0 14px;border-bottom:1px solid #e9eae4;color:#778078;font-size:11px}
+.account-overview strong{color:#34473d;font-size:12px}
+.account-overview small{margin-left:auto;color:#999f97}
+.account-list{display:grid;gap:12px;margin-top:14px}
+.account-card{display:grid;grid-template-columns:minmax(210px,1.2fr) minmax(330px,1.6fr);gap:15px 22px;padding:18px;border:1px solid #e9eae4;border-radius:5px;background:#fff}
+.account-identity{display:flex;align-items:center;gap:12px;min-width:0}
+.account-avatar{width:42px;height:42px;display:grid;place-items:center;flex:none;border-radius:50%;background:#f1efe7;color:#7f704f;font:500 20px 'Playfair Display',serif}
+.account-identity>div:last-child{display:grid;gap:5px;min-width:0}
+.account-identity strong{font-size:13px;color:#283b32}
+.account-identity small{font-size:10px;color:#7c857d;overflow-wrap:anywhere}
+.account-permissions{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.account-permissions>label,.account-password>label{display:flex;flex-direction:column;gap:6px;color:#788078;font-size:10px}
+.account-permissions select{height:38px;min-width:145px;border:1px solid #e5e7e1;border-radius:4px;padding:0 10px;background:#fff;color:#293b32;font-size:11px}
+.account-active-control{display:flex!important;flex-direction:row!important;align-items:center;gap:7px!important;height:38px;white-space:nowrap}
+.account-active-control input{accent-color:#294b43}
+.account-password{grid-column:2;display:flex;align-items:flex-end;gap:10px;padding-top:12px;border-top:1px solid #f0f0eb}
+.account-password>label{flex:1;max-width:330px}
+.account-password input{height:37px}
+.account-protected{grid-column:1/-1;margin:0;color:#8b8069;font-size:10px}
+@media(max-width:900px){.account-card{grid-template-columns:1fr}.account-password{grid-column:1}.account-overview small{margin-left:0}}
+@media(max-width:560px){.platform-access{padding:17px}.account-toolbar{align-items:stretch;flex-direction:column}.account-search{max-width:none}.account-permissions{align-items:stretch;flex-direction:column}.account-permissions>label{width:100%}.account-permissions select{width:100%}.account-active-control{height:auto!important}.account-password{align-items:stretch;flex-direction:column}.account-password>label{max-width:none}.account-password button{width:100%}}
