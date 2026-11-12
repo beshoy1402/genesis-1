@@ -177,6 +177,17 @@ Deno.serve(async (req: Request) => {
       return error ? fail(error.message) : json({ success: true });
     }
 
+    if (action === "create_subject") {
+      const name = text(body.name, 100);
+      const code = text(body.code, 30);
+      if (!name) return fail("Enter a subject name.");
+      const { data, error } = await admin.from("subjects")
+        .insert({ name, code: code || null })
+        .select("id,name,code").single();
+      if (error) return fail(error.code === "23505" ? "A subject with that name or code already exists." : error.message, 400);
+      return json({ success: true, subject: data, message: "Subject added. It is now available for teacher assignments." });
+    }
+
     if (action === "assign_teacher") {
       const teacher_id = text(body.teacher_id, 80), class_id = text(body.class_id, 80), subject_id = text(body.subject_id, 80);
       if (!teacher_id || !class_id || !subject_id) return fail("Teacher, class, and subject are required.");
