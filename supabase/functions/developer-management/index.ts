@@ -205,6 +205,25 @@ Deno.serve(async (req: Request) => {
       if (!target || target.role === "developer") return fail("Developer accounts cannot be modified from this screen.", 403);
       const { error } = await admin.from("profiles").update({ role, is_active }).eq("id", id);
       if (error) return fail(error.message);
+      if (role === "teacher") {
+        const { data: existing } = await admin.from("teachers").select("id").eq("profile_id", id).maybeSingle();
+        if (!existing) {
+          const { error: detailError } = await admin.from("teachers").insert({ profile_id: id });
+          if (detailError) return fail("Role updated, but teacher profile setup failed: " + detailError.message, 500);
+        }
+      } else if (role === "student") {
+        const { data: existing } = await admin.from("students").select("id").eq("profile_id", id).maybeSingle();
+        if (!existing) {
+          const { error: detailError } = await admin.from("students").insert({ profile_id: id, admission_number: "GEN-" + id.replaceAll("-", "").slice(0, 10).toUpperCase() });
+          if (detailError) return fail("Role updated, but student profile setup failed: " + detailError.message, 500);
+        }
+      } else if (role === "parent") {
+        const { data: existing } = await admin.from("parents").select("id").eq("profile_id", id).maybeSingle();
+        if (!existing) {
+          const { error: detailError } = await admin.from("parents").insert({ profile_id: id });
+          if (detailError) return fail("Role updated, but parent profile setup failed: " + detailError.message, 500);
+        }
+      }
       return json({ success: true });
     }
 
