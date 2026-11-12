@@ -20,22 +20,28 @@ export function DeveloperTools(){
  const [error,setError]=useState('');
  const [message,setMessage]=useState('');
  const [editing,setEditing]=useState<SchoolClass|null>(null);
+ const [accountSearch,setAccountSearch]=useState('');
+ const [passwordDrafts,setPasswordDrafts]=useState<Record<string,string>>({});
 
  const refresh=useCallback(async()=>{
   setLoading(true);setError('');
-  const {data:result,error:invokeError}=await sb.functions.invoke('developer-management',{body:{action:'list'}});
-  if(invokeError)setError(invokeError.message);
-  else if(result?.error)setError(result.error);
-  else setData({...empty,...result});
-  setLoading(false);
+  try {
+   const {data:result,error:invokeError}=await sb.functions.invoke('developer-management',{body:{action:'list'}});
+   if(invokeError){let detail='';try{detail=(await invokeError.context?.clone().json())?.error||'';}catch{}setError(detail||invokeError.message||'Could not load accounts.');}
+   else if(result?.error)setError(result.error);
+   else setData({...empty,...result});
+  } catch {setError('Could not connect to the school system. Check your connection and try again.');}
+  finally {setLoading(false);}
  },[sb]);
  useEffect(()=>{void refresh();},[refresh]);
 
  async function action(payload:Record<string,unknown>,success:string){
   setBusy(true);setError('');setMessage('');
-  const {data:result,error:invokeError}=await sb.functions.invoke('developer-management',{body:payload});
-  if(invokeError||result?.error){setError(result?.error||invokeError?.message||'The action could not be completed.');setBusy(false);return false;}
-  setMessage(result?.message||success);await refresh();setBusy(false);return true;
+  try {
+   const {data:result,error:invokeError}=await sb.functions.invoke('developer-management',{body:payload});
+   if(invokeError||result?.error){let detail=result?.error||'';try{detail=detail||(await invokeError?.context?.clone().json())?.error||'';}catch{}setError(detail||invokeError?.message||'The action could not be completed.');setBusy(false);return false;}
+   setMessage(result?.message||success);await refresh();setBusy(false);return true;
+  } catch {setError('The request could not reach the school system. Please try again.');setBusy(false);return false;}
  }
  async function saveClass(event:FormEvent<HTMLFormElement>){
   event.preventDefault();const formElement=event.currentTarget;const form=new FormData(formElement);
@@ -72,11 +78,28 @@ export function DeveloperTools(){
    <form className="admin-forms" onSubmit={e=>void createMember(e,'student')}><h3><UserPlus size={16}/> Add a student</h3><div className="form-row"><input name="full_name" required placeholder="Full name"/><input name="email" type="email" required placeholder="Email address"/><input name="username" required minLength={3} maxLength={40} pattern="[A-Za-z0-9._-]+" placeholder="Username"/><input name="password" type="password" required minLength={8} autoComplete="new-password" placeholder="Temporary password (8+ characters)"/><input name="admission_number" required placeholder="Admission number"/><input name="date_of_birth" type="date"/></div><div className="form-row"><select name="class_id" defaultValue=""><option value="">Not assigned yet</option>{data.classes.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div><button className="small-primary" disabled={busy}>Add student</button></form>
    <div className="developer-list">{data.students.map(s=><div className="developer-row" key={s.id}><div><strong>{s.full_name||'Student'} <span className={s.is_active?'status-active':'status-inactive'}>{s.is_active?'Active':'Inactive'}</span></strong><small>{s.email} · {s.admission_number}</small></div><div className="developer-actions"><select aria-label={'Assign class to '+s.full_name} value={s.class_id||''} disabled={busy} onChange={e=>void action({action:'assign_student_class',student_id:s.id,class_id:e.target.value},'Student class updated.')}><option value="">Unassigned</option>{data.classes.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>{s.is_active&&<button type="button" className="small-danger" disabled={busy} onClick={()=>void action({action:'remove_member',id:s.profile_id,role:'student'},'Student deactivated. Academic records were preserved.')}>Remove</button>}</div></div>)}</div>
   </section>
-  <section id="platform-access" className="content-card admin-tools">
-   <div className="section-heading"><div><p className="eyebrow">SECURITY & ACCOUNTS</p><h2>Platform Access</h2><p className="muted">Review accounts, change school roles, enable or disable access, and request secure password resets.</p></div><ShieldCheck size={20} className="heading-icon"/></div>
-   <div className="developer-actions"><button type="button" className="small-secondary" disabled={loading||busy} onClick={()=>void refresh()}><RefreshCw size={14}/> Refresh accounts</button><span className="inline-note">Developer accounts are protected from changes in this screen.</span></div>
-   <div className="developer-list">{data.accounts.map(account=><form className="developer-row access-row" key={account.id} onSubmit={e=>void saveAccount(e,account.id)}><div className="account-summary"><strong>{account.full_name||'Unnamed account'} <span className={account.is_active?'status-active':'status-inactive'}>{account.is_active?'Active':'Inactive'}</span></strong><small>{account.email||account.username||account.id}</small></div><div className="developer-actions"><select name="role" defaultValue={account.role} disabled={account.role==='developer'} aria-label="Account role"><option value="student">Student</option><option value="parent">Parent</option><option value="teacher">Teacher</option><option value="admin">Administrator</option><option value="developer">Developer</option></select><label className="active-toggle"><input name="is_active" type="checkbox" defaultChecked={account.is_active} disabled={account.role==='developer'}/> Active</label><button className="small-primary" disabled={busy||account.role==='developer'}>Save</button><button type="button" className="small-secondary" disabled={busy} onClick={()=>void action({action:'password_reset',id:account.id},'Password reset email requested.')}><Mail size={14}/> Reset password</button></div></form>)}</div>
+  <section id="platform-access" className="content-card admin-tools platform-access">
+   <div className="section-heading"><div><p className="eyebrow">SECURITY & ACCOUNTS</p><h2>Platform Access</h2><p className="muted">Manage who can sign in, their school role, and their password.</p></div><ShieldCheck size={20} className="heading-icon"/></div>
+   <div className="account-toolbar">
+    <div className="account-search"><input value={accountSearch} onChange={e=>setAccountSearch(e.target.value)} placeholder="Search by name, email, or username" aria-label="Search accounts"/></div>
+    <button type="button" className="small-secondary" disabled={loading||busy} onClick={()=>void refresh()}><RefreshCw size={14}/> Refresh</button>
+   </div>
+   <div className="account-overview"><strong>{data.accounts.length} accounts</strong><span>{data.accounts.filter(a=>a.is_active).length} active</span><span>{data.accounts.filter(a=>!a.is_active).length} inactive</span><small>Developer accounts are protected.</small></div>
+   <div className="account-list">{data.accounts.filter(a=>[a.full_name,a.email,a.username||'',a.role].join(' ').toLowerCase().includes(accountSearch.toLowerCase())).map(account=><article className="account-card" key={account.id}>
+    <div className="account-identity"><div className="account-avatar">{(account.full_name||account.email||'?').trim().charAt(0).toUpperCase()}</div><div><strong>{account.full_name||'Unnamed account'} <span className={account.is_active?'status-active':'status-inactive'}>{account.is_active?'Active':'Inactive'}</span></strong><small>{account.email||'No email'}</small><small>{account.username?'Username: '+account.username:'No username assigned'}</small></div></div>
+    <form className="account-permissions" onSubmit={e=>void saveAccount(e,account.id)}>
+     <label>School role<select name="role" defaultValue={account.role} disabled={account.role==='developer'} aria-label={'Role for '+(account.full_name||account.email)}><option value="student">Student</option><option value="parent">Parent</option><option value="teacher">Teacher</option><option value="admin">Administrator</option><option value="developer">Developer</option></select></label>
+     <label className="account-active-control"><input name="is_active" type="checkbox" defaultChecked={account.is_active} disabled={account.role==='developer'}/> Account active</label>
+     <button className="small-primary" disabled={busy||account.role==='developer'}>Save changes</button>
+    </form>
+    <form className="account-password" onSubmit={e=>{e.preventDefault();const password=passwordDrafts[account.id]||'';if(password.length<8){setError('Password must be at least 8 characters.');return;}void action({action:'set_password',id:account.id,password},'Password updated. The user can keep using this password.').then(ok=>{if(ok)setPasswordDrafts(current=>({...current,[account.id]:''}));});}}>
+     <label>Set password<input type="password" autoComplete="new-password" minLength={8} required value={passwordDrafts[account.id]||''} onChange={e=>setPasswordDrafts(current=>({...current,[account.id]:e.target.value}))} placeholder="Enter a new password"/></label>
+     <button type="submit" className="small-secondary" disabled={busy||account.role==='developer'}>Update password</button>
+    </form>
+    {account.role==='developer'&&<p className="account-protected">Developer account — protected from changes here.</p>}
+   </article>)}</div>
    {!loading&&!data.accounts.length&&<p className="inline-note">No accounts found.</p>}
+   {!loading&&data.accounts.length>0&&!data.accounts.some(a=>[a.full_name,a.email,a.username||'',a.role].join(' ').toLowerCase().includes(accountSearch.toLowerCase()))&&<p className="inline-note">No accounts match that search.</p>}
   </section>
   {loading&&<div className="loading-row"><LoaderCircle size={17} className="spin"/> Loading developer records…</div>}
   {message&&<p className="form-success" role="status">{message}</p>}
