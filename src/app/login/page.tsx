@@ -10,7 +10,7 @@ export default function LoginPage() {
     </div>
     <section className="login-form-panel"><div className="login-form-inner">
       <div className="mobile-brand"><div className="brand-mark">G<span>.</span></div><span>GENESIS</span></div>
-      <p className="eyebrow">YOUR SCHOOL, CONNECTED</p><h2>Welcome back</h2><p className="muted">Sign in with your school email to continue.</p>
+      <p className="eyebrow">YOUR SCHOOL, CONNECTED</p><h2>Welcome back</h2><p className="muted">Sign in with your school email or username to continue.</p>
       <LoginForm />
       <p className="login-help">Need help accessing your account? <a href="mailto:portal@genesis.edu">Contact the school office</a></p>
     </div></section>
