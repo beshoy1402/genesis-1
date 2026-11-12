@@ -24,3 +24,28 @@
 .records-section,.teacher-tools{margin-top:15px}.child-switch{display:flex;align-items:center;gap:10px;width:max-content;margin:4px 0 15px;color:#657166;font-size:10px}.child-switch select,.teacher-action-form select,.teacher-action-form input,.teacher-action-form textarea,.attendance-line select{height:35px;border:1px solid #e6e8e2;background:#fff;padding:0 10px;color:#465148;font-size:10px;outline:none}.record-summary{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f7f7f2;color:#7e887d;font-size:10px;margin-bottom:12px}.record-summary span:last-child{display:flex;align-items:center;gap:6px}.records-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.record-panel{border:1px solid #efefe9;padding:14px;margin-top:10px}.records-grid .record-panel{margin-top:0}.record-panel h3{display:flex;align-items:center;gap:8px;color:#59665c;font-size:11px;margin:0 0 8px}.record-panel h3 svg{color:#a99361}.record-line{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #f0f0eb}.record-line>span{display:flex;flex-direction:column;gap:4px;min-width:0}.record-line strong{font-size:10px;color:#414e45;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.record-line small{font-size:9px;color:#969d95}.record-line>b{font-size:10px;color:#516157;white-space:nowrap}.record-empty{font-size:10px;color:#9aa098;margin:13px 0}.attendance-tag{font-size:9px;text-transform:capitalize}.attendance-tag.present{color:#3e7b56}.attendance-tag.absent{color:#a65248}.attendance-tag.late,.attendance-tag.excused{color:#9a8154}.teacher-tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.teacher-action-form{border:1px solid #edeee8;background:#fff;padding:15px;display:flex;flex-direction:column;gap:9px}.teacher-action-form h3{font:500 17px 'Playfair Display',serif;color:#34483e;margin:0 0 3px}.teacher-action-form>label,.attendance-controls>label,.score-row label{display:flex;flex-direction:column;gap:5px;color:#677269;font-size:9px}.teacher-action-form input,.teacher-action-form select{width:100%}.teacher-action-form textarea{padding:9px;min-height:58px;resize:vertical}.score-row,.attendance-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.attendance-controls{grid-template-columns:repeat(3,minmax(0,1fr))}.teacher-action-form .publish-check{flex-direction:row;align-items:center}.teacher-action-form .publish-check input{width:auto}.attendance-form{grid-column:span 2}.attendance-list{max-height:240px;overflow:auto;border:1px solid #edeee8;padding:0 10px}.attendance-line{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0eb}.attendance-line:last-child{border:0}.attendance-line strong{font-size:10px;color:#606b61}.attendance-line select{height:29px}.teacher-action-form .small-primary{align-self:flex-start}
 @media(max-width:720px){.records-grid,.teacher-tool-grid{grid-template-columns:1fr}.attendance-form{grid-column:auto}.record-summary{align-items:flex-start;gap:8px;flex-direction:column}.attendance-controls{grid-template-columns:1fr 1fr}.attendance-controls label:last-child{grid-column:span 2}}
 .icon-button{cursor:pointer}.replace-button{position:relative}
+
+
+/* Developer management workspace */
+.developer-tools{display:grid;gap:22px;margin-top:28px}
+.developer-tools .admin-tools{scroll-margin-top:90px}
+.developer-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.developer-list{display:grid;gap:0;margin-top:18px}
+.developer-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)}
+.developer-row>div:first-child{display:grid;gap:5px;min-width:0}
+.developer-row strong{font-size:13px}
+.developer-row small{font-size:11px;color:var(--muted);overflow-wrap:anywhere}
+.developer-row .developer-actions{justify-content:flex-end}
+.developer-row select{min-height:36px;border:1px solid var(--line);border-radius:3px;padding:0 9px;background:#fff;color:var(--ink);font-size:12px}
+.small-secondary,.small-danger{min-height:36px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;border:1px solid var(--line);border-radius:3px;background:#fff;color:var(--green);font-size:11px;font-weight:600}
+.small-danger{border-color:#ecd8d3;color:#a33f34}
+.compact-row{padding:9px 0}
+.access-row{align-items:flex-start}
+.account-summary{min-width:190px}
+.status-active,.status-inactive{display:inline-block;margin-left:6px;padding:3px 7px;border-radius:20px;font-size:9px;font-weight:700;vertical-align:middle}
+.status-active{background:#edf6ef;color:#39734d}
+.status-inactive{background:#f8eeee;color:#9c4942}
+.active-toggle{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);white-space:nowrap}
+.admin-forms h3{display:flex;align-items:center;gap:7px}
+.admin-forms .form-row select{height:47px;min-width:150px;border:1px solid #e4e5df;border-radius:3px;padding:0 12px;background:#fff;color:#222f2a;font-size:13px}
+@media(max-width:760px){.developer-row,.access-row{align-items:flex-start;flex-direction:column}.developer-row .developer-actions{justify-content:flex-start;width:100%}.developer-row .developer-actions select{max-width:100%}.account-summary{min-width:0}.developer-tools .form-row>*{min-width:100%}}
