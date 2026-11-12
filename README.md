@@ -2,6 +2,12 @@
 
 Next.js, React, TypeScript, and Supabase portal foundation for students, parents, teachers, and administrators. The public landing page comes first; all roles use one sign-in flow and are routed from the trusted `profiles.role` value.
 
+## Live portal
+
+Production: https://genesis-international-school-pi.vercel.app
+
+The public landing and shared sign-in pages are available without an account. Dashboard routes require an authenticated school account and redirect signed-out visitors to the shared login page.
+
 ## Supabase project
 
 The Supabase project has been created in the `genesis org test1` organization, in Frankfurt (`eu-central-1`). Its project ref is `fdcfoeupbjqtkidkchpa`.
@@ -57,4 +63,4 @@ Install dependencies with `pnpm install`, then start the app with `pnpm dev`. Us
 - Login uses school email and password. Although profiles can store a username, username aliases are not enabled because a safe username lookup requires a trusted server-side identity flow.
 - User invitations, parent/child linking, teacher assignments, bulk imports, full grade/attendance/fee CRUD screens, charts, message threads, and admin account lifecycle tools still need implementation.
 - No sample school accounts or records are created. Authentication, role routing between real accounts, file upload/download, and cross-role authorization tests require provisioned users and linked school data.
-- Deployment is not configured or claimed. Set the production environment variables and Supabase Auth redirect URLs after choosing a host/domain.
+- The production deployment is live on Vercel. Real-user authentication, role routing, and data workflows still need end-to-end verification after school accounts and records are provisioned. Add the production URL to Supabase Auth's allowed redirect URLs before enabling password recovery or other email-based flows.
