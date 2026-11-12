@@ -27,7 +27,7 @@ export function LoginForm() {
         if (sessionError) throw sessionError;
       }
       window.location.assign('/portal');
-    } catch (cause) {
+    } catch {
       setError('We couldn’t sign you in. Check your email or username and password, then try again.');
       setLoading(false);
     }
