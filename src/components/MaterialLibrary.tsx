@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Download, FileText, LoaderCircle, Search, Trash2, UploadCloud, X } from 'lucide-react';
+import { Download, FilePenLine, FileText, LoaderCircle, Search, Trash2, UploadCloud, X, Replace } from 'lucide-react';
 import type { Role } from '@/lib/roles';
 
-type Material = { id: string; title: string; description: string | null; storage_path: string; original_filename: string; file_type: string; file_size: number; category: string; uploaded_at: string; is_published: boolean; subject_id: string; class_id: string; teacher_id: string | null; subjectName?: string; className?: string; teacherName?: string };
+type Material = { id: string; title: string; description: string | null; storage_path: string; original_filename: string; file_type: string; file_size: number; category: string; folder:string|null; uploaded_at: string; is_published: boolean; subject_id: string; class_id: string; teacher_id: string | null; subjectName?: string; className?: string; teacherName?: string };
 type Choice = { id: string; name: string };
 const categoryNames: Record<string,string> = { lecture_notes:'Lecture notes', worksheets:'Worksheets', homework:'Homework', revision:'Revision materials', presentations:'Presentations', exam_papers:'Exam papers', study_guides:'Study guides', other:'Other resources' };
 const extensions = new Set(['pdf','doc','docx','ppt','pptx','xls','xlsx','jpg','jpeg','png','txt','zip']);
@@ -61,7 +61,7 @@ export function MaterialLibrary({ role }: { role: Role }) {
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(''); setMessage('');
     const form = new FormData(event.currentTarget); const classId = String(form.get('class_id') || ''); const subjectId = String(form.get('subject_id') || '');
-    const title = String(form.get('title') || '').trim(); const description = String(form.get('description') || '').trim(); const category = String(form.get('category') || 'other'); const fileInput=event.currentTarget.elements.namedItem('files') as HTMLInputElement; const files = Array.from(fileInput.files || []);
+    const title = String(form.get('title') || '').trim(); const description = String(form.get('description') || '').trim(); const category = String(form.get('category') || 'other'); const folder=String(form.get('folder')||'').trim()||null; const fileInput=event.currentTarget.elements.namedItem('files') as HTMLInputElement; const files = Array.from(fileInput.files || []);
     if (!files.length || !classId || !subjectId || !title || (role==='teacher'&&!teacherId)) { setError('Choose an assigned class, subject, title, and at least one file.'); setBusy(false); return; }
     const { data: { user } } = await sb.auth.getUser();
     if (!user) { setError('Your session has expired. Sign in again.'); setBusy(false); return; }
@@ -73,11 +73,11 @@ export function MaterialLibrary({ role }: { role: Role }) {
     for (const file of files) {
       const ext=file.name.split('.').pop()?.toLowerCase()||'';
       const contentType=file.type||mimeTypes[ext]||'application/octet-stream';
-      const id = crypto.randomUUID(); const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_'); const path = `${classId}/${id}/${safeName}`;
+      const id = crypto.randomUUID(); const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_'); const path = `${classId}/${user.id}/${id}/${safeName}`;
       const { error: uploadError } = await sb.storage.from('learning-materials').upload(path,file,{contentType,upsert:false});
       if (uploadError) { setError(`Could not upload ${file.name}: ${uploadError.message}`); break; }
       const published = form.get('publish') === 'on';
-      const { error: rowError } = await sb.from('learning_materials').insert({ id,title: files.length > 1 ? `${title} · ${file.name}` : title,description,storage_path:path,original_filename:file.name,file_type:contentType,file_size:file.size,category,subject_id:subjectId,class_id:classId,teacher_id:role==='admin'?null:teacherId,is_published:published,published_at:published ? new Date().toISOString() : null });
+      const { error: rowError } = await sb.from('learning_materials').insert({ id,title: files.length > 1 ? `${title} · ${file.name}` : title,description,folder,storage_path:path,original_filename:file.name,file_type:contentType,file_size:file.size,category,subject_id:subjectId,class_id:classId,teacher_id:role==='admin'?null:teacherId,is_published:published,published_at:published ? new Date().toISOString() : null });
       if (rowError) { await sb.storage.from('learning-materials').remove([path]); setError(`File saved but its record could not be created: ${rowError.message}`); break; }
       saved++;
     }
@@ -90,6 +90,10 @@ export function MaterialLibrary({ role }: { role: Role }) {
     if (urlError || !data?.signedUrl) { setError('This file is unavailable or your account does not have access.'); return; }
     window.open(data.signedUrl,'_blank','noopener,noreferrer');
   }
+
+  async function edit(item:Material){const title=window.prompt('Material title',item.title);if(title===null)return;const description=window.prompt('Description',item.description||'');if(description===null)return;if(!title.trim()){setError('Title cannot be empty.');return;}setBusy(true);const {error:editError}=await sb.from('learning_materials').update({title:title.trim(),description:description.trim()||null}).eq('id',item.id);setBusy(false);if(editError)setError(`Could not update this material: ${editError.message}`);else{setMessage('Material details updated.');await refresh();}}
+
+  async function replaceFile(item:Material,file:File){setBusy(true);setError('');setMessage('');const ext=file.name.split('.').pop()?.toLowerCase()||'';if(!extensions.has(ext)||file.size===0||file.size>maxSize){setError('Choose a supported file no larger than 50 MB.');setBusy(false);return;}const {data:{user}}=await sb.auth.getUser();if(!user){setError('Your session has expired. Sign in again.');setBusy(false);return;}const id=crypto.randomUUID();const filename=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const path=`${item.class_id}/${user.id}/${id}/${filename}`;const type=file.type||mimeTypes[ext]||'application/octet-stream';const {error:uploadError}=await sb.storage.from('learning-materials').upload(path,file,{contentType:type,upsert:false});if(uploadError){setError(`Could not upload the replacement: ${uploadError.message}`);setBusy(false);return;}const {error:updateError}=await sb.from('learning_materials').update({storage_path:path,original_filename:file.name,file_type:type,file_size:file.size,uploaded_at:new Date().toISOString()}).eq('id',item.id);if(updateError){await sb.storage.from('learning-materials').remove([path]);setError(`The material record could not be updated: ${updateError.message}`);setBusy(false);return;}const {error:cleanupError}=await sb.storage.from('learning-materials').remove([item.storage_path]);setBusy(false);if(cleanupError)setError(`The replacement is active, but the old file could not be cleaned up: ${cleanupError.message}`);else setMessage('Learning material replaced.');await refresh();}
 
   async function remove(item: Material) {
     if (!window.confirm(`Delete “${item.title}” and its stored file?`)) return;
@@ -109,6 +113,7 @@ export function MaterialLibrary({ role }: { role: Role }) {
         <div><label htmlFor="material-subject">Subject</label><select id="material-subject" name="subject_id" required defaultValue=""><option value="" disabled>Select subject</option>{subjects.map((s)=><option value={s.id} key={s.id}>{s.name}</option>)}</select></div>
         <div><label htmlFor="material-category">Category</label><select id="material-category" name="category" defaultValue="other">{Object.entries(categoryNames).map(([v,n])=><option value={v} key={v}>{n}</option>)}</select></div>
         <div className="upload-description"><label htmlFor="material-description">Description <span className="muted">(optional)</span></label><input id="material-description" name="description" maxLength={500} placeholder="What students will learn or practise"/></div>
+        <div><label htmlFor="material-folder">Folder <span className="muted">(optional)</span></label><input id="material-folder" name="folder" maxLength={80} placeholder="e.g. Week 3 / Revision"/></div>
         <div className="file-picker"><label htmlFor="material-files">Files</label><input id="material-files" name="files" type="file" multiple required accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.txt,.zip"/></div>
       </div>
       <label className="publish-check"><input type="checkbox" name="publish" defaultChecked/><span>Publish now and notify students and linked parents</span></label>
@@ -118,8 +123,8 @@ export function MaterialLibrary({ role }: { role: Role }) {
     <div className="material-search"><Search size={16}/><input aria-label="Search learning materials" value={search} onChange={(event)=>setSearch(event.target.value)} placeholder="Search resources"/>{search&&<button aria-label="Clear search" onClick={()=>setSearch('')}><X size={14}/></button>}</div>
     {error && <p className="form-error" role="alert">{error}</p>}{message && <p className="form-success" role="status">{message}</p>}
     {loading ? <div className="loading-row"><LoaderCircle size={18} className="spin"/> Loading resources…</div> : visible.length === 0 ? <div className="empty-state"><FileText size={24}/><strong>{search ? 'No matching resources' : 'No learning materials yet'}</strong><span>New resources shared with your class will appear here.</span></div> : <div className="material-list">{visible.map((item)=><article className="material-row" key={item.id}>
-      <div className="file-icon"><FileText size={19}/></div><div className="material-info"><div className="material-title-row"><strong>{item.title}</strong>{!item.is_published&&<span className="draft-pill">Draft</span>}</div><p>{item.description || item.original_filename}</p><div className="material-meta"><span>{item.subjectName}</span><span>{item.teacherName}</span><span>{categoryNames[item.category]||'Resource'}</span><span>{new Date(item.uploaded_at).toLocaleDateString()}</span><span>{formatBytes(Number(item.file_size))}</span></div></div>
-      <div className="material-actions"><button className="icon-button" onClick={()=>void download(item)} aria-label={`Download ${item.title}`}><Download size={17}/></button>{(role==='teacher'||role==='admin')&&<button className="icon-button danger-icon" onClick={()=>void remove(item)} aria-label={`Delete ${item.title}`} disabled={busy}><Trash2 size={16}/></button>}</div>
+      <div className="file-icon"><FileText size={19}/></div><div className="material-info"><div className="material-title-row"><strong>{item.title}</strong>{!item.is_published&&<span className="draft-pill">Draft</span>}</div><p>{item.description || item.original_filename}</p><div className="material-meta"><span>{item.subjectName}</span><span>{item.teacherName}</span><span>{categoryNames[item.category]||'Resource'}</span>{item.folder&&<span>{item.folder}</span>}<span>{new Date(item.uploaded_at).toLocaleDateString()}</span><span>{formatBytes(Number(item.file_size))}</span></div></div>
+      <div className="material-actions"><button className="icon-button" onClick={()=>void download(item)} aria-label={`Download ${item.title}`}><Download size={17}/></button>{(role==='teacher'||role==='admin')&&<><button className="icon-button" onClick={()=>void edit(item)} aria-label={`Edit ${item.title}`} disabled={busy}><FilePenLine size={16}/></button><label className="icon-button replace-button" aria-label={`Replace ${item.title}`}><Replace size={16}/><input type="file" hidden accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.txt,.zip" onChange={(event)=>{const file=event.currentTarget.files?.[0];if(file)void replaceFile(item,file);event.currentTarget.value='';}}/></label><button className="icon-button danger-icon" onClick={()=>void remove(item)} aria-label={`Delete ${item.title}`} disabled={busy}><Trash2 size={16}/></button></>}</div>
     </article>)}</div>}
   </section>;
 }

@@ -19,7 +19,7 @@ Never place a Supabase secret or service-role key in a `NEXT_PUBLIC_` variable o
 
 ### Apply the database migration
 
-`supabase/migrations/` contains the relational school records, private Storage bucket, role helpers, RLS policies, material access policies, teacher display-name access, class/subject-scoped teacher workflows, and publication notifications. All six current migrations have been applied to the created Supabase project.
+`supabase/migrations/` contains the relational school records, private Storage bucket, role helpers, RLS policies, material access policies, teacher display-name access, class/subject-scoped teacher workflows, student/class integrity guards, and publication notifications. All eight current migrations have been applied to the created Supabase project.
 
 For another project, run the migration from the Supabase SQL Editor as the project owner, or install the Supabase CLI and link the project before pushing migrations. Verify the schema, migration history, and Storage bucket afterward. Do not apply this initial migration a second time to the existing project.
 
@@ -48,7 +48,7 @@ Install dependencies with `pnpm install`, then start the app with `pnpm dev`. Us
 - Public cinematic landing page with animated waves, floating Genesis monogram, exact school name, entrance reveal, portal link, and reduced-motion support.
 - One email-and-password Supabase login and password-recovery flow; server role routing and per-role protected pages.
 - Four dashboards with role-specific navigation, Supabase-backed summary counts, school announcements, notifications, mobile navigation, and sign-out.
-- Private learning-material uploads for assigned classes/subjects, file validation up to 50 MB, draft or immediate publishing, signed downloads, and database notifications to enrolled students and their linked parents.
+- Private learning-material uploads for assigned classes/subjects, folders, file validation up to 50 MB, draft or immediate publishing, title/description edits, replacement and deletion, signed downloads, and database notifications to enrolled students and their linked parents.
 - PostgreSQL tables and RLS for profiles, role records, classes, enrollments, subjects, assignments, grades and history, attendance, timetable, exams/results, announcements, notifications, fees/payments, messages, and learning materials.
 - Basic administrator actions for creating classes and subjects and publishing school announcements.
 
