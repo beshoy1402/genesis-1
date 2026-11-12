@@ -19,7 +19,7 @@ Never place a Supabase secret or service-role key in a `NEXT_PUBLIC_` variable o
 
 ### Apply the database migration
 
-`supabase/migrations/` contains the relational school records, private Storage bucket, role helpers, RLS policies, material access policies, teacher display-name access, class/subject-scoped teacher workflows, student/class integrity guards, and publication notifications. All eight current migrations have been applied to the created Supabase project.
+`supabase/migrations/` contains the relational school records, private Storage bucket, role helpers, RLS policies, material access policies, teacher display-name access, class/subject-scoped teacher workflows, student/class integrity guards, publication notifications, and the additional `developer` enum value present in the connected project. The nine checked-in migrations match the migration history currently applied to the created Supabase project. The `developer` role is reserved and is not one of the four school dashboard roles.
 
 For another project, run the migration from the Supabase SQL Editor as the project owner, or install the Supabase CLI and link the project before pushing migrations. Verify the schema, migration history, and Storage bucket afterward. Do not apply this initial migration a second time to the existing project.
 
@@ -54,7 +54,7 @@ Install dependencies with `pnpm install`, then start the app with `pnpm dev`. Us
 
 ## Current limitations
 
-- Login uses school email and password. Username aliases are not enabled because a safe username lookup requires a trusted server-side identity flow.
+- Login uses school email and password. Although profiles can store a username, username aliases are not enabled because a safe username lookup requires a trusted server-side identity flow.
 - User invitations, parent/child linking, teacher assignments, bulk imports, full grade/attendance/fee CRUD screens, charts, message threads, and admin account lifecycle tools still need implementation.
 - No sample school accounts or records are created. Authentication, role routing between real accounts, file upload/download, and cross-role authorization tests require provisioned users and linked school data.
 - Deployment is not configured or claimed. Set the production environment variables and Supabase Auth redirect URLs after choosing a host/domain.
